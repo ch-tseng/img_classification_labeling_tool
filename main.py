@@ -39,23 +39,27 @@ for id, file in enumerate(os.listdir(ds_images_path)):
         filename, file_extension = os.path.splitext(file)
 
         if(file_extension.lower() in ('.jpg', '.png', '.jpeg')):
-            img = cv2.imread(file_path)
-            img_display = imutils.resize(img, height=img_display_size[1])
-            if(img_display.shape[1]>img_display_size[0]):
-                img_display = imutils.resize(img_display, width=img_display_size[0])
-
-            cv2.imwrite("tmp.jpg", img_display)
-
-            answers = []
-            for q_id, question in enumerate(d_classes):
-                #choice = easygui.choicebox(msg, title, choices)
-                reply = easygui.buttonbox(image="tmp.jpg", title=t_classes[q_id], choices=d_classes[q_id])
-                map_class_id = classes_def[str(q_id)+"_"+reply]
-                print("Select:", reply, map_class_id)
-                answers.append(map_class_id)
-
             img_class_file = os.path.join(ds_labels_path, filename+'.txt')
-            with open(img_class_file, 'w') as fp:
-                for i, ans in enumerate(answers):
-                    if(i>0): fp.write(',')
-                    fp.write(ans)
+            if(os.path.isfile(img_class_file)):
+                print("Skip",file_path)
+
+            else:
+                img = cv2.imread(file_path)
+                img_display = imutils.resize(img, height=img_display_size[1])
+                if(img_display.shape[1]>img_display_size[0]):
+                    img_display = imutils.resize(img_display, width=img_display_size[0])
+
+                cv2.imwrite("tmp.jpg", img_display)
+
+                answers = []
+                for q_id, question in enumerate(d_classes):
+                    #choice = easygui.choicebox(msg, title, choices)
+                    reply = easygui.buttonbox(image="tmp.jpg", title=t_classes[q_id], choices=d_classes[q_id])
+                    map_class_id = classes_def[str(q_id)+"_"+reply]
+                    print("Select:", reply, map_class_id)
+                    answers.append(map_class_id)
+                
+                with open(img_class_file, 'w') as fp:
+                    for i, ans in enumerate(answers):
+                        if(i>0): fp.write(',')
+                        fp.write(ans)
