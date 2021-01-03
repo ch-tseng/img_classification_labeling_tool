@@ -4,12 +4,18 @@ import easygui, imutils
 import cv2
 
 class_file = "datasets/human/class_map.txt"
-ds_path = "datasets/human"
-img_display_size = (180, 280)
+img_source = "D:/temp2/Human_sex/male/"
+target_ds_path = "D:/temp2/Human_sex/"
+img_display_size = (240, 360)
 
 #-----------------------------------------------------------------------
-ds_images_path = os.path.join(ds_path, 'images')
-ds_labels_path = os.path.join(ds_path, 'labels')
+ds_images_path = os.path.join(target_ds_path, 'images')
+ds_labels_path = os.path.join(target_ds_path, 'labels')
+
+if not os.path.exists(ds_images_path):
+    os.makedirs(ds_images_path)
+if not os.path.exists(ds_labels_path):
+    os.makedirs(ds_labels_path)
 
 d_classes, t_classes = [], []
 classes_def = {}
@@ -32,18 +38,15 @@ with  open(class_file, 'r', encoding="utf-8") as fp:
 
 print(classes_def)
 
-for id, file in enumerate(os.listdir(ds_images_path)):
-    file_path = os.path.join(ds_images_path, file)
+for id, file in enumerate(os.listdir(img_source)):
+    file_path = os.path.join(img_source, file)
 
     if(os.path.isfile(file_path)):
         filename, file_extension = os.path.splitext(file)
 
         if(file_extension.lower() in ('.jpg', '.png', '.jpeg')):
             img_class_file = os.path.join(ds_labels_path, filename+'.txt')
-            if(os.path.isfile(img_class_file)):
-                print("Skip",file_path)
-
-            else:
+            if(not os.path.isfile(img_class_file)):
                 img = cv2.imread(file_path)
                 img_display = imutils.resize(img, height=img_display_size[1])
                 if(img_display.shape[1]>img_display_size[0]):
@@ -52,14 +55,38 @@ for id, file in enumerate(os.listdir(ds_images_path)):
                 cv2.imwrite("tmp.jpg", img_display)
 
                 answers = []
+                txt_inform = ""
                 for q_id, question in enumerate(d_classes):
                     #choice = easygui.choicebox(msg, title, choices)
-                    reply = easygui.buttonbox(image="tmp.jpg", title=t_classes[q_id], choices=d_classes[q_id])
-                    map_class_id = classes_def[str(q_id)+"_"+reply]
-                    print("Select:", reply, map_class_id)
-                    answers.append(map_class_id)
+                    if("*Skip" not in question):
+                        question.append("*Skip")
+                    if("*Delete" not in question):
+                        question.append("*Delete")
+
+                    reply = easygui.buttonbox(image="tmp.jpg", title=t_classes[q_id]+':'+file, choices=question)
+
+                    if(reply not in ["*Skip", "*Delete"]):
+                        map_class_id = classes_def[str(q_id)+"_"+reply]                        
+                        answers.append(map_class_id)
+                        txt_inform += t_classes[q_id]+': '+reply + '\n'
+                    else:
+                        if(reply=="*Delete"):
+                            print("delete the image file", file_path)
+                            os.remove(file_path)
+
+                        break
                 
-                with open(img_class_file, 'w') as fp:
-                    for i, ans in enumerate(answers):
-                        if(i>0): fp.write(',')
-                        fp.write(ans)
+                print(file_path, answers)
+                if(reply not in ["*Skip", "*Delete"]):
+
+                    confirm = easygui.boolbox(image="tmp.jpg", msg="下方資訊是否正確?\n"+txt_inform, 
+                        title=t_classes[q_id]+':'+file, choices=["正確", "不正確"])
+
+                    if(confirm):
+                        with open(img_class_file, 'w') as fp:
+                            for i, ans in enumerate(answers):
+                                if(i>0): fp.write(',')
+                                fp.write(ans)
+
+                        cv2.imwrite(os.path.join(ds_images_path,filename+'.jpg'), img)
+
