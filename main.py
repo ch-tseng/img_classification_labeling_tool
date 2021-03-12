@@ -4,7 +4,7 @@ import easygui, imutils
 import cv2
 
 class_file = "human_class_map.txt" #分類的各項設定, 可針對不同dataset有不同的設定檔
-img_source = "H:/Dataset/Mine/Human/Human_sex/female/"  #需要分類的影像path
+img_source = "C:/Users/myvno/Projs/Image_Classification_tool/female2686/"  #需要分類的影像path
 target_ds_path = "output_dataset/"  #分類結果(包含image及分類txt檔)要放置的位置 (此資料夾會自動create)
 img_display_size = (240, 360)  #分類時, 圖片顯示的大小 (寬,長)
 
